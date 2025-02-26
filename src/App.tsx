@@ -1,14 +1,19 @@
 import { RouterProvider } from "react-router-dom";
 import { router } from "./routes";
-import { SuperSEO } from "react-super-seo";
-
-
+import { Toaster } from "sonner";
+import { Helmet, HelmetProvider } from 'react-helmet-async';
 import "./App.css";
+
+
 function App() {
   return (
     <>
-      <SuperSEO title="Pizza-shop | Home" description="Hi!" />
-      <RouterProvider router={router} />
+      <HelmetProvider>
+        <Helmet titleTemplate="%s | pizza.shop" />
+        <Toaster richColors />
+        <RouterProvider router={router} />
+      </HelmetProvider>
+      
     </>
   );
 }
