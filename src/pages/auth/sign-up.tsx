@@ -75,10 +75,11 @@ export function SignUp() {
                         </div>
                         <Button disabled={isSubmitting} className="w-full" type="submit">Finalizar cadastro</Button>
                         <p className="px-6 text-center text-sm leading-relaxed text-muted-foreground"> 
-                            Ao continuar, você concorda com nossos 
-                            <a className="underline underline-offset-4" href="#">Termos de serviço</a>
+                            Ao continuar, você concorda com nossos
+                            {" "}
+                            <a className="underline underline-offset-4" href="#">Termos de serviço </a>
                              e 
-                            <a className="underline underline-offset-4" href="#">políticas de privacidade</a>.
+                            <a className="underline underline-offset-4" href="#"> políticas de privacidade</a>.
                         </p>
                     </form>
                 </div>
