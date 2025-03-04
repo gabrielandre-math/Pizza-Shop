@@ -7,11 +7,32 @@ import {
   TableHeader,
   TableRow,
 } from '../../../components/ui/table'
-import { OrderTableRow } from './order-table-row'
 import { OrderTableFilters } from './order-table-filters'
 import { Pagination } from '../../../components/ui/pagination'
+import { useQuery } from '@tanstack/react-query'
+import { getOrders } from '../../../api/get-orders'
+import { OrderTableRow, OrderTableRowProps } from './order-table-row'
+import { useSearchParams } from 'react-router-dom'
+import { z } from 'zod'
 
-export function Orders() {
+export function Orders({ order }: OrderTableRowProps) {
+  const [searchParams, setSearchParams] = useSearchParams()
+
+  const pageIndex = z.coerce
+    .number()
+    .transform((page) => page - 1)
+    .parse(searchParams.get('page') ?? '1')
+
+  const { data: result } = useQuery({
+    queryKey: ['orders', pageIndex],
+    queryFn: () => getOrders({ pageIndex }),
+  })
+  function handlePaginate(pageIndex: number) {
+    setSearchParams((state) => {
+      state.set('page', (pageIndex + 1).toString())
+      return state
+    })
+  }
   useEffect(() => {
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
     const newLocal = (document.title = 'Pedidos | pizza.shop')
@@ -39,13 +60,21 @@ export function Orders() {
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {Array.from({ length: 15 }).map((_, i) => {
-                  return <OrderTableRow key={i} />
-                })}
+                {result &&
+                  result.orders.map((order) => (
+                    <OrderTableRow key={order.orderId} order={order} />
+                  ))}
               </TableBody>
             </Table>
           </div>
-          <Pagination pageIndex={0} totalCount={105} perPage={10} />
+          {result && (
+            <Pagination
+              onPageChange={handlePaginate}
+              pageIndex={result.meta.pageIndex}
+              totalCount={result.meta.totalCount}
+              perPage={result.meta.perPage}
+            />
+          )}
         </div>
       </div>
     </>
