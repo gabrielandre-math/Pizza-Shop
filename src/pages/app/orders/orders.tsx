@@ -14,6 +14,7 @@ import { getOrders } from '../../../api/get-orders'
 import { OrderTableRow, OrderTableRowProps } from './order-table-row'
 import { useSearchParams } from 'react-router-dom'
 import { z } from 'zod'
+import { OrderTableSkeleton } from './order-table-skeleton'
 
 export function Orders({ order }: OrderTableRowProps) {
   const [searchParams, setSearchParams] = useSearchParams()
@@ -27,7 +28,7 @@ export function Orders({ order }: OrderTableRowProps) {
     .transform((page) => page - 1)
     .parse(searchParams.get('page') ?? '1')
 
-  const { data: result } = useQuery({
+  const { data: result, isLoading: isLoadingOrders } = useQuery({
     queryKey: ['orders', pageIndex, orderId, customerName, status],
     queryFn: () =>
       getOrders({
@@ -70,6 +71,7 @@ export function Orders({ order }: OrderTableRowProps) {
                 </TableRow>
               </TableHeader>
               <TableBody>
+                {isLoadingOrders && <OrderTableSkeleton />}
                 {result &&
                   result.orders.map((order) => (
                     <OrderTableRow key={order.orderId} order={order} />

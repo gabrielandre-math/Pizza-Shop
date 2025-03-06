@@ -13,18 +13,26 @@ import { cancelOrder } from '../../../api/cancel-order'
 import { approveOrder } from '../../../api/approve-order'
 import { deliverOrder } from '../../../api/deliver-order'
 import { dispatchOrder } from '../../../api/dispatch-order'
+
+type OrderStatus =
+  | 'pending'
+  | 'canceled'
+  | 'processing'
+  | 'delivering'
+  | 'delivered'
+
 export interface OrderTableRowProps {
   order: {
     orderId: string
     createdAt: string
-    status: 'pending' | 'canceled' | 'processing' | 'delivering' | 'delivered'
+    status: OrderStatus
     customerName: string
     total: number
   }
 }
 
 export function OrderTableRow({ order }: OrderTableRowProps) {
-  const { isDetailsOpen, setIsDetailsOpen } = useState(false)
+  const [isDetailsOpen, setIsDetailsOpen] = useState(false)
   const queryClient = useQueryClient()
 
   function updateOrdersStatusOnCache(orderId: string, status: OrderStatus) {
@@ -33,17 +41,13 @@ export function OrderTableRow({ order }: OrderTableRowProps) {
     })
 
     ordersListCache.forEach(([cacheKey, cacheData]) => {
-      if (!cacheData) {
-        return
-      }
+      if (!cacheData) return
+
       queryClient.setQueryData<GetOrdersResponse>(cacheKey, {
         ...cacheData,
-        orders: cacheData.orders.map((order) => {
-          if (order.orderId === orderId) {
-            return { ...order, status }
-          }
-          return order
-        }),
+        orders: cacheData.orders.map((order) =>
+          order.orderId === orderId ? { ...order, status } : order,
+        ),
       })
     })
   }
@@ -55,13 +59,15 @@ export function OrderTableRow({ order }: OrderTableRowProps) {
         updateOrdersStatusOnCache(orderId, 'canceled')
       },
     })
-  const { mutateAsync: approveOrderFn, isPending: isAprrovingOrder } =
+
+  const { mutateAsync: approveOrderFn, isPending: isApprovingOrder } =
     useMutation({
       mutationFn: approveOrder,
       async onSuccess(_, { orderId }) {
         updateOrdersStatusOnCache(orderId, 'processing')
       },
     })
+
   const { mutateAsync: dispatchOrderFn, isPending: isDispatchingOrder } =
     useMutation({
       mutationFn: dispatchOrder,
@@ -95,7 +101,7 @@ export function OrderTableRow({ order }: OrderTableRowProps) {
         {order.orderId}
       </TableCell>
       <TableCell className="text-muted-foreground">
-        {formatDistanceToNow(order.createdAt, {
+        {formatDistanceToNow(new Date(order.createdAt), {
           locale: ptBR,
           addSuffix: true,
         })}
@@ -113,7 +119,7 @@ export function OrderTableRow({ order }: OrderTableRowProps) {
       <TableCell>
         {order.status === 'pending' && (
           <Button
-            disabled={isAprrovingOrder}
+            disabled={isApprovingOrder}
             onClick={() => approveOrderFn({ orderId: order.orderId })}
             variant="outline"
           >
